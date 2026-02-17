@@ -1,25 +1,50 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, ScrollView } from 'react-native';
+import LogoText from '@/components/LogoText';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import {
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 interface SettingsItemProps {
     icon: keyof typeof Ionicons.glyphMap;
     label: string;
     subtitle?: string;
     color?: string;
+    trailing?: 'arrow' | 'switch';
 }
 
-function SettingsItem({ icon, label, subtitle, color = '#3b82f6' }: SettingsItemProps) {
+function SettingsItem({
+    icon,
+    label,
+    subtitle,
+    color = '#3b82f6',
+    trailing = 'arrow',
+}: SettingsItemProps) {
     return (
         <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7}>
-            <View style={[styles.settingsIconContainer, { backgroundColor: color + '18' }]}>
-                <Ionicons name={icon} size={20} color={color} />
+            <View style={[styles.settingsIconContainer, { backgroundColor: color + '15' }]}>
+                <Ionicons name={icon} size={18} color={color} />
             </View>
             <View style={styles.settingsTextContainer}>
                 <Text style={styles.settingsLabel}>{label}</Text>
                 {subtitle && <Text style={styles.settingsSubtitle}>{subtitle}</Text>}
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#475569" />
+            {trailing === 'arrow' ? (
+                <Ionicons name="chevron-forward" size={18} color="#334155" />
+            ) : (
+                <Switch
+                    value={true}
+                    trackColor={{ false: '#1e293b', true: '#3b82f6' }}
+                    thumbColor="#ffffff"
+                    ios_backgroundColor="#1e293b"
+                />
+            )}
         </TouchableOpacity>
     );
 }
@@ -27,7 +52,7 @@ function SettingsItem({ icon, label, subtitle, color = '#3b82f6' }: SettingsItem
 export default function SettingsScreen() {
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+            <StatusBar barStyle="light-content" backgroundColor="#020617" />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* Header */}
                 <View style={styles.header}>
@@ -38,12 +63,46 @@ export default function SettingsScreen() {
 
                 {/* App Info Card */}
                 <View style={styles.appInfoCard}>
-                    <View style={styles.appLogoContainer}>
-                        <Ionicons name="hardware-chip-outline" size={28} color="#3b82f6" />
+                    <View style={styles.appInfoLeft}>
+                        <View style={styles.appLogoContainer}>
+                            <Ionicons name="hardware-chip" size={24} color="#3b82f6" />
+                        </View>
+                        <View>
+                            <LogoText size="small" />
+                            <Text style={styles.appVersion}>Version 1.0.0 • Build 1</Text>
+                        </View>
                     </View>
-                    <View>
-                        <Text style={styles.appName}>MemoraAI</Text>
-                        <Text style={styles.appVersion}>Version 1.0.0</Text>
+                    <View style={styles.proBadge}>
+                        <Text style={styles.proBadgeText}>FREE</Text>
+                    </View>
+                </View>
+
+                {/* AI Engine Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>AI Engine</Text>
+                    <View style={styles.sectionCard}>
+                        <SettingsItem
+                            icon="flash-outline"
+                            label="AI Processing"
+                            subtitle="On-device mode"
+                            color="#f59e0b"
+                            trailing="switch"
+                        />
+                        <View style={styles.divider} />
+                        <SettingsItem
+                            icon="speedometer-outline"
+                            label="Scan Intensity"
+                            subtitle="Balanced"
+                            color="#6366f1"
+                        />
+                        <View style={styles.divider} />
+                        <SettingsItem
+                            icon="cloud-offline-outline"
+                            label="Offline Mode"
+                            subtitle="All data stays on device"
+                            color="#22c55e"
+                            trailing="switch"
+                        />
                     </View>
                 </View>
 
@@ -54,7 +113,7 @@ export default function SettingsScreen() {
                         <SettingsItem
                             icon="notifications-outline"
                             label="Notifications"
-                            subtitle="Manage alerts and reminders"
+                            subtitle="Alerts and reminders"
                             color="#f59e0b"
                         />
                         <View style={styles.divider} />
@@ -90,6 +149,14 @@ export default function SettingsScreen() {
                             subtitle="Manage cached data"
                             color="#ef4444"
                         />
+                        <View style={styles.divider} />
+                        <SettingsItem
+                            icon="finger-print-outline"
+                            label="Biometric Lock"
+                            subtitle="Disabled"
+                            color="#6366f1"
+                            trailing="switch"
+                        />
                     </View>
                 </View>
 
@@ -108,7 +175,19 @@ export default function SettingsScreen() {
                             label="Rate this App"
                             color="#f59e0b"
                         />
+                        <View style={styles.divider} />
+                        <SettingsItem
+                            icon="help-circle-outline"
+                            label="Help & Support"
+                            color="#10b981"
+                        />
                     </View>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>MemoraAI © 2026</Text>
+                    <Text style={styles.footerSubtext}>All processing happens on your device</Text>
                 </View>
 
                 <View style={styles.bottomSpacer} />
@@ -120,22 +199,22 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0f172a',
+        backgroundColor: '#020617',
     },
     scrollContent: {
         paddingBottom: 100,
     },
     header: {
         paddingHorizontal: 24,
-        paddingTop: 60,
-        paddingBottom: 20,
+        paddingTop: 56,
+        paddingBottom: 16,
     },
     accentLine: {
-        width: 40,
-        height: 4,
+        width: 36,
+        height: 3,
         backgroundColor: '#10b981',
         borderRadius: 2,
-        marginBottom: 16,
+        marginBottom: 14,
     },
     title: {
         fontSize: 32,
@@ -145,58 +224,75 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     subtitle: {
-        fontSize: 15,
-        fontWeight: '400',
+        fontSize: 13,
+        fontWeight: '500',
         color: '#64748b',
         letterSpacing: 0.3,
     },
     appInfoCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#1e293b',
+        justifyContent: 'space-between',
+        backgroundColor: '#0f172a',
         marginHorizontal: 24,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 24,
+        borderRadius: 20,
+        padding: 18,
+        marginBottom: 28,
         borderWidth: 1,
-        borderColor: '#2d3a4f',
+        borderColor: '#1e293b',
+    },
+    appInfoLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 14,
     },
     appLogoContainer: {
-        width: 50,
-        height: 50,
-        borderRadius: 14,
-        backgroundColor: 'rgba(59, 130, 246, 0.12)',
+        width: 48,
+        height: 48,
+        borderRadius: 16,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(59, 130, 246, 0.2)',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    appName: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: '#f1f5f9',
-    },
     appVersion: {
-        fontSize: 13,
+        fontSize: 12,
         color: '#64748b',
-        marginTop: 2,
+        marginTop: 4,
+        fontWeight: '500',
+    },
+    proBadge: {
+        backgroundColor: '#1e293b',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#334155',
+    },
+    proBadgeText: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: '#64748b',
+        letterSpacing: 1,
     },
     section: {
         paddingHorizontal: 24,
-        marginBottom: 20,
+        marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#64748b',
-        letterSpacing: 0.5,
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#475569',
+        letterSpacing: 0.8,
         textTransform: 'uppercase',
         marginBottom: 10,
     },
     sectionCard: {
-        backgroundColor: '#1e293b',
-        borderRadius: 16,
+        backgroundColor: '#0f172a',
+        borderRadius: 18,
         borderWidth: 1,
-        borderColor: '#2d3a4f',
+        borderColor: '#1e293b',
         overflow: 'hidden',
     },
     settingsItem: {
@@ -227,8 +323,22 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: '#2d3a4f',
+        backgroundColor: '#1e293b',
         marginLeft: 62,
+    },
+    footer: {
+        alignItems: 'center',
+        paddingVertical: 24,
+    },
+    footerText: {
+        fontSize: 12,
+        color: '#334155',
+        fontWeight: '600',
+    },
+    footerSubtext: {
+        fontSize: 11,
+        color: '#1e293b',
+        marginTop: 4,
     },
     bottomSpacer: {
         height: 20,
