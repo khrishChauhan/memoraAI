@@ -1,41 +1,50 @@
+import { Feather } from '@expo/vector-icons';
 import React from 'react';
-import { FlatList, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { FlatList, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { FileCard } from '../components/FileCard';
 import { Header } from '../components/Header';
 import { Colors } from '../constants/Colors';
-
-const MOCK_FILES = [
-    { id: '1', name: 'resume_final_v2.pdf', size: '1.2 MB', tag: 'Duplicate' as const, icon: 'file-text' as const },
-    { id: '2', name: 'IMG_20240315.jpg', size: '4.8 MB', tag: 'Duplicate' as const, icon: 'image' as const },
-    { id: '3', name: 'project_report.docx', size: '2.3 MB', tag: 'Important' as const, icon: 'file' as const },
-    { id: '4', name: 'screen_recording.mp4', size: '145 MB', tag: 'Unused' as const, icon: 'video' as const },
-    { id: '5', name: 'backup_2023.zip', size: '2.1 GB', tag: 'Unused' as const, icon: 'archive' as const },
-    { id: '6', name: 'IMG_20240315_copy.jpg', size: '4.8 MB', tag: 'Duplicate' as const, icon: 'image' as const },
-    { id: '7', name: 'tax_receipt_2024.pdf', size: '320 KB', tag: 'Important' as const, icon: 'file-text' as const },
-    { id: '8', name: 'old_notes.txt', size: '45 KB', tag: 'Unused' as const, icon: 'edit-3' as const },
-];
+import { useFiles } from '../context/FileContext';
 
 const FilesScreen = () => {
+    const { files } = useFiles();
+
+    const renderEmpty = () => (
+        <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconRing}>
+                <Feather name="inbox" size={40} color={Colors.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>No files scanned yet</Text>
+            <Text style={styles.emptyDescription}>
+                Scan files from Home to see them here.
+            </Text>
+        </View>
+    );
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-            <Header title="Files" subtitle="Analyzed storage items" />
+            <Header title="Files" subtitle={`${files.length} scanned files`} />
 
-            <FlatList
-                data={MOCK_FILES}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item, index }) => (
-                    <FileCard
-                        name={item.name}
-                        size={item.size}
-                        tag={item.tag}
-                        icon={item.icon}
-                        index={index}
-                    />
-                )}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-            />
+            {files.length === 0 ? (
+                renderEmpty()
+            ) : (
+                <FlatList
+                    data={files}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item, index }) => (
+                        <FileCard
+                            name={item.name}
+                            size={item.size}
+                            type={item.type}
+                            dateAdded={item.dateAdded}
+                            index={index}
+                        />
+                    )}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -48,6 +57,35 @@ const styles = StyleSheet.create({
     listContent: {
         paddingHorizontal: 24,
         paddingBottom: 100,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyIconRing: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: Colors.cardBorder,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: Colors.textSecondary,
+        marginBottom: 8,
+    },
+    emptyDescription: {
+        fontSize: 14,
+        color: Colors.textMuted,
+        textAlign: 'center',
+        lineHeight: 20,
     },
 });
 

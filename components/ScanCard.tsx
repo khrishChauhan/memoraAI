@@ -1,13 +1,21 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Animated,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface ScanCardProps {
     onScan: () => void;
+    isScanning?: boolean;
 }
 
-export const ScanCard: React.FC<ScanCardProps> = ({ onScan }) => {
+export const ScanCard: React.FC<ScanCardProps> = ({ onScan, isScanning = false }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
@@ -44,7 +52,6 @@ export const ScanCard: React.FC<ScanCardProps> = ({ onScan }) => {
             tension: 100,
             useNativeDriver: true,
         }).start();
-        onScan();
     };
 
     return (
@@ -61,26 +68,40 @@ export const ScanCard: React.FC<ScanCardProps> = ({ onScan }) => {
                 activeOpacity={1}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
+                onPress={onScan}
+                disabled={isScanning}
                 style={styles.card}
             >
                 {/* Icon Ring */}
                 <View style={styles.iconRing}>
                     <View style={styles.iconInner}>
-                        <Feather name="search" size={28} color={Colors.accent} />
+                        {isScanning ? (
+                            <ActivityIndicator size="small" color={Colors.accent} />
+                        ) : (
+                            <Feather name="search" size={28} color={Colors.accent} />
+                        )}
                     </View>
                 </View>
 
-                <Text style={styles.title}>Scan Device</Text>
+                <Text style={styles.title}>
+                    {isScanning ? 'Scanning...' : 'Scan Device'}
+                </Text>
                 <Text style={styles.description}>
                     Detect duplicate files, unused files, and generate smart insights
                 </Text>
 
                 {/* Button */}
-                <View style={styles.button}>
-                    <Text style={styles.buttonText}>Start Scan</Text>
-                    <View style={styles.buttonArrow}>
-                        <Feather name="arrow-right" size={16} color="#fff" />
-                    </View>
+                <View style={[styles.button, isScanning && styles.buttonDisabled]}>
+                    {isScanning ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                        <>
+                            <Text style={styles.buttonText}>Start Scan</Text>
+                            <View style={styles.buttonArrow}>
+                                <Feather name="arrow-right" size={16} color="#fff" />
+                            </View>
+                        </>
+                    )}
                 </View>
             </TouchableOpacity>
         </Animated.View>
@@ -144,15 +165,20 @@ const styles = StyleSheet.create({
     button: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: Colors.accent,
         paddingVertical: 14,
         paddingHorizontal: 28,
         borderRadius: 14,
+        minWidth: 160,
         shadowColor: Colors.accent,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 10,
         elevation: 4,
+    },
+    buttonDisabled: {
+        opacity: 0.7,
     },
     buttonText: {
         color: '#fff',

@@ -3,50 +3,72 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 
-type FileTag = 'Duplicate' | 'Unused' | 'Important';
-
 interface FileCardProps {
     name: string;
-    size: string;
-    tag: FileTag;
-    icon: keyof typeof Feather.glyphMap;
+    size: number;
+    type: string;
+    dateAdded: number;
     index?: number;
 }
 
-const TAG_CONFIG: Record<FileTag, { color: string; bg: string }> = {
-    Duplicate: { color: Colors.duplicate, bg: 'rgba(244, 63, 94, 0.12)' },
-    Unused: { color: Colors.unused, bg: 'rgba(249, 115, 22, 0.12)' },
-    Important: { color: Colors.important, bg: 'rgba(34, 211, 238, 0.12)' },
+const getFileIcon = (type: string): keyof typeof Feather.glyphMap => {
+    if (type.startsWith('image/')) return 'image';
+    if (type.includes('pdf')) return 'file-text';
+    if (type.startsWith('video/')) return 'video';
+    if (type.startsWith('audio/')) return 'music';
+    if (type.includes('zip') || type.includes('archive')) return 'archive';
+    return 'file';
+};
+
+const formatSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
+const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString();
 };
 
 export const FileCard: React.FC<FileCardProps> = ({
     name,
     size,
-    tag,
-    icon,
+    type,
+    dateAdded,
     index = 0,
 }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(15)).current;
+    const slideAnim = useRef(new Animated.Value(20)).current;
 
     useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: 350,
-                delay: 150 + index * 70,
+                delay: 100 + index * 60,
                 useNativeDriver: true,
             }),
             Animated.timing(slideAnim, {
                 toValue: 0,
                 duration: 350,
-                delay: 150 + index * 70,
+                delay: 100 + index * 60,
                 useNativeDriver: true,
             }),
         ]).start();
     }, []);
 
-    const tagConfig = TAG_CONFIG[tag];
+    const icon = getFileIcon(type);
 
     return (
         <Animated.View
@@ -56,22 +78,23 @@ export const FileCard: React.FC<FileCardProps> = ({
             ]}
         >
             <View style={styles.iconContainer}>
-                <Feather name={icon} size={20} color={Colors.textSecondary} />
+                <Feather name={icon} size={20} color={Colors.accent} />
             </View>
 
             <View style={styles.content}>
                 <Text style={styles.name} numberOfLines={1}>
                     {name}
                 </Text>
-                <Text style={styles.size}>{size}</Text>
+                <View style={styles.meta}>
+                    <Text style={styles.size}>{formatSize(size)}</Text>
+                    <View style={styles.dot} />
+                    <Text style={styles.date}>{formatDate(dateAdded)}</Text>
+                </View>
             </View>
 
-            <View style={[styles.badge, { backgroundColor: tagConfig.bg }]}>
-                <View
-                    style={[styles.badgeDot, { backgroundColor: tagConfig.color }]}
-                />
-                <Text style={[styles.badgeText, { color: tagConfig.color }]}>
-                    {tag}
+            <View style={styles.typeBadge}>
+                <Text style={styles.typeText}>
+                    {type.split('/')[1]?.toUpperCase() || 'FILE'}
                 </Text>
             </View>
         </Animated.View>
@@ -93,7 +116,7 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.04)',
+        backgroundColor: Colors.accentGlow,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -106,28 +129,37 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: Colors.textPrimary,
-        marginBottom: 2,
+        marginBottom: 4,
+    },
+    meta: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     size: {
         fontSize: 12,
         color: Colors.textMuted,
     },
-    badge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
+    dot: {
+        width: 3,
+        height: 3,
+        borderRadius: 1.5,
+        backgroundColor: Colors.textMuted,
+        marginHorizontal: 6,
     },
-    badgeDot: {
-        width: 5,
-        height: 5,
-        borderRadius: 2.5,
-        marginRight: 5,
+    date: {
+        fontSize: 12,
+        color: Colors.textMuted,
     },
-    badgeText: {
-        fontSize: 11,
+    typeBadge: {
+        backgroundColor: 'rgba(59, 130, 246, 0.08)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    typeText: {
+        fontSize: 9,
         fontWeight: '700',
-        letterSpacing: 0.3,
+        color: Colors.accent,
+        letterSpacing: 0.5,
     },
 });
