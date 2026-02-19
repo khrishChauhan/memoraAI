@@ -103,6 +103,7 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, navigation })
     const tabs = [
         { label: 'Home', icon: 'home' as const },
         { label: 'Files', icon: 'folder' as const },
+        { label: 'Chat', icon: 'message-square' as const },
     ];
 
     return (

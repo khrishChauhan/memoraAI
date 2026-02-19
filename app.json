@@ -20,7 +20,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.MemoraAI"
+      "package": "com.anonymous.MemoraAI",
+      "metaData": {
+        "com.facebook.soloader.enabled": "false"
+      }
     },
     "web": {
       "output": "static",
@@ -39,11 +42,26 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "ndkVersion": "26.1.10909125",
+            "newArchEnabled": true
+          }
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "08fabacd-5f3c-4c5e-8134-b244a21ec5a5"
+      }
     }
   }
 }

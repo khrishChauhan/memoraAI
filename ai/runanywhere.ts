@@ -160,6 +160,34 @@ export async function runFullTest(onStatus?: StatusCallback): Promise<string> {
 }
 
 // ============================================================================
+// Generate Chat Response
+// ============================================================================
+
+export async function generateResponse(
+    prompt: string,
+    onStatus?: StatusCallback
+): Promise<string> {
+    try {
+        if (!isInitialized) {
+            await initializeAI(onStatus);
+        }
+        if (!isModelReady) {
+            await prepareModel(onStatus);
+        }
+
+        console.log('[MemoraAI] Generating response for:', prompt);
+        // Using chat API
+        const response = await RunAnywhere.chat(prompt);
+        console.log('[MemoraAI] Generated:', response);
+        return response;
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error('[MemoraAI] Generation failed:', msg);
+        throw error;
+    }
+}
+
+// ============================================================================
 // Status getters
 // ============================================================================
 
