@@ -70,7 +70,7 @@ const HomeScreen = () => {
             delay: 600,
             useNativeDriver: true,
         }).start();
-    }, []);
+    }, [aiCardFade]);
 
     const handleScan = async () => {
         if (isScanning) return;
@@ -99,7 +99,7 @@ const HomeScreen = () => {
 
             addFiles(scannedFiles);
             router.push('/(tabs)/files');
-        } catch (error) {
+        } catch (_error) {
             Alert.alert('Error', 'Failed to pick files. Please try again.');
         } finally {
             setIsScanning(false);

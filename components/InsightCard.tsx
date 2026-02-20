@@ -37,7 +37,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [fadeAnim, index, slideAnim]);
 
     const handlePressIn = () => {
         Animated.spring(scaleAnim, {

@@ -66,7 +66,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [fadeAnim, index, slideAnim]);
 
     const icon = getFileIcon(type);
 

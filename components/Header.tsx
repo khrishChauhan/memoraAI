@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [fadeAnim, slideAnim]);
 
     return (
         <Animated.View

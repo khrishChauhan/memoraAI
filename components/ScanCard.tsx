@@ -36,7 +36,7 @@ export const ScanCard: React.FC<ScanCardProps> = ({ onScan, isScanning = false }
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [fadeAnim, slideAnim]);
 
     const handlePressIn = () => {
         Animated.spring(scaleAnim, {

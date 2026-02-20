@@ -45,7 +45,7 @@ const TabItem: React.FC<TabItemProps> = ({ label, icon, isActive, onPress }) => 
                 }),
             ]).start();
         }
-    }, [isActive]);
+    }, [isActive, scaleAnim, iconScaleAnim]);
 
     const pillOpacity = scaleAnim.interpolate({
         inputRange: [0, 1],

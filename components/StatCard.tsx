@@ -28,7 +28,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, delay = 0 }) =
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [delay, fadeAnim, scaleAnim]);
 
     return (
         <Animated.View
