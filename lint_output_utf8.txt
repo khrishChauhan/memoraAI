@@ -1,0 +1,29 @@
+﻿
+K:\code\MemoraAI\babel.config.js
+  8:1  warning  Expected an assignment or function call and instead saw an expression  no-unused-expressions
+  8:1  error    'IP' is not defined                                                    no-undef
+
+K:\code\MemoraAI\components\CustomTabBar.tsx
+  48:8  warning  React Hook useEffect has missing dependencies: 'iconScaleAnim' and 'scaleAnim'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+K:\code\MemoraAI\components\FileCard.tsx
+  69:8  warning  React Hook useEffect has missing dependencies: 'fadeAnim', 'index', and 'slideAnim'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+K:\code\MemoraAI\components\Header.tsx
+  30:8  warning  React Hook useEffect has missing dependencies: 'fadeAnim' and 'slideAnim'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+K:\code\MemoraAI\components\InsightCard.tsx
+  40:8  warning  React Hook useEffect has missing dependencies: 'fadeAnim', 'index', and 'slideAnim'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+K:\code\MemoraAI\components\ScanCard.tsx
+  39:8  warning  React Hook useEffect has missing dependencies: 'fadeAnim' and 'slideAnim'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+K:\code\MemoraAI\components\StatCard.tsx
+  31:8  warning  React Hook useEffect has missing dependencies: 'delay', 'fadeAnim', and 'scaleAnim'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+K:\code\MemoraAI\screens\HomeScreen.tsx
+   73:8   warning  React Hook React.useEffect has a missing dependency: 'aiCardFade'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  102:18  warning  'error' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+Γ£û 10 problems (1 error, 9 warnings)
+
