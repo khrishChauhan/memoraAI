@@ -5,4 +5,3 @@ module.exports = function (api) {
         plugins: ['react-native-worklets-core/plugin', 'react-native-reanimated/plugin'],
     };
 };
-IP
