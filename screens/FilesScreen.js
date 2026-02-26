@@ -2,9 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
-import { Animated, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import { Animated, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+let Swipeable = null;
+if (Platform.OS !== 'web') {
+    Swipeable = require('react-native-gesture-handler').Swipeable;
+}
 
 const FileCard = ({ item, index, onDelete }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -62,35 +65,59 @@ const FileCard = ({ item, index, onDelete }) => {
         );
     };
 
-    return (
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <Swipeable
-                ref={swipeableRef}
-                renderRightActions={renderRightActions}
-                friction={2}
-                rightThreshold={40}
-                overshootRight={false}
-            >
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <View style={styles.iconContainer}>
-                            <Ionicons
-                                name={item.type === 'IMG' ? 'image' : 'document-text'}
-                                size={24}
-                                color="#6366F1"
-                            />
-                        </View>
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{item.type}</Text>
-                        </View>
+    const cardContent = (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <View style={styles.leftHeader}>
+                    <View style={styles.iconContainer}>
+                        <Ionicons
+                            name={item.type === 'IMG' ? 'image' : 'document-text'}
+                            size={24}
+                            color="#6366F1"
+                        />
                     </View>
-                    <Text style={styles.fileName}>{item.name}</Text>
-                    <View style={styles.cardFooter}>
-                        <Text style={styles.fileSize}>{item.size}</Text>
-                        <Text style={styles.fileDate}>{item.date}</Text>
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{item.type}</Text>
                     </View>
                 </View>
-            </Swipeable>
+
+                <TouchableOpacity
+                    onPress={handleDelete}
+                    style={styles.deleteButton}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="trash-outline" size={18} color="#FF4D4D" />
+                </TouchableOpacity>
+            </View>
+            <Text style={styles.fileName} numberOfLines={1}>{item.name}</Text>
+            <View style={styles.cardFooter}>
+                <Text style={styles.fileSize}>{item.size}</Text>
+                <Text style={styles.fileDate}>{item.date}</Text>
+            </View>
+        </View>
+    );
+
+    // On native: wrap with Swipeable for swipe-to-delete
+    // On web: just show the card with the delete button
+    if (Swipeable && Platform.OS !== 'web') {
+        return (
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                <Swipeable
+                    ref={swipeableRef}
+                    renderRightActions={renderRightActions}
+                    friction={2}
+                    rightThreshold={40}
+                    overshootRight={false}
+                >
+                    {cardContent}
+                </Swipeable>
+            </Animated.View>
+        );
+    }
+
+    return (
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            {cardContent}
         </Animated.View>
     );
 };
@@ -199,6 +226,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 12,
     },
+    leftHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     iconContainer: {
         width: 44,
         height: 44,
@@ -212,11 +243,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 8,
+        marginLeft: 12,
     },
     badgeText: {
         color: '#A0A0A0',
         fontSize: 12,
         fontWeight: '700',
+    },
+    deleteButton: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#1E1414',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#3D1A1A',
     },
     fileName: {
         fontSize: 18,
