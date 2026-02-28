@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
 import { Animated, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -71,7 +70,7 @@ const FileCard = ({ item, index, onDelete }) => {
                 <View style={styles.leftHeader}>
                     <View style={styles.iconContainer}>
                         <Ionicons
-                            name={item.type === 'IMG' ? 'image' : 'document-text'}
+                            name={['IMG', 'JPEG', 'JPG', 'PNG', 'HEIC', 'GIF', 'HEIF', 'WEBP'].includes(item.type) ? 'image' : 'document-text'}
                             size={24}
                             color="#6366F1"
                         />
@@ -122,13 +121,15 @@ const FileCard = ({ item, index, onDelete }) => {
     );
 };
 
-const FilesScreen = ({ navigation, scannedFiles: files, setScannedFiles: setFiles }) => {
+import { useFiles } from '../context/FilesContext';
+
+const FilesScreen = ({ navigation }) => {
+    const { scannedFiles: files, setScannedFiles: setFiles } = useFiles();
     const hasFiles = files && files.length > 0;
 
     const deleteFile = async (fileUri) => {
         const updatedFiles = files.filter(file => file.uri !== fileUri);
         setFiles(updatedFiles);
-        await AsyncStorage.setItem("MEMORA_FILES", JSON.stringify(updatedFiles));
     };
 
     return (

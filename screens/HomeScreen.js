@@ -5,9 +5,11 @@ import { Alert, Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View }
 
 const { width } = Dimensions.get('window');
 
-import { getStoredFiles, mergeFiles, saveFiles } from '../utils/storage';
+import { useFiles } from '../context/FilesContext';
+import { getStoredFiles, mergeFiles } from '../utils/storage';
 
-const HomeScreen = ({ navigation, setScannedFiles }) => {
+const HomeScreen = ({ navigation }) => {
+    const { setScannedFiles } = useFiles();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -54,7 +56,6 @@ const HomeScreen = ({ navigation, setScannedFiles }) => {
                     return;
                 }
 
-                await saveFiles(mergedContent);
                 setScannedFiles(mergedContent);
                 navigation.navigate('Files');
             }

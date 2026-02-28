@@ -1,111 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useIsFocused } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, LayoutAnimation, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFiles } from '../context/FilesContext';
 import { analyzeFilesWithAI } from '../services/aiService';
 
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-const SuggestionCard = ({ title, reason, index }) => {
-    const [expanded, setExpanded] = useState(false);
-
-    const toggleExpand = () => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setExpanded(!expanded);
-    };
-
-    return (
-        <TouchableOpacity
-            style={[styles.suggestionItem, expanded && styles.cardExpanded]}
-            onPress={toggleExpand}
-            activeOpacity={0.7}
-        >
-            <View style={styles.cardHeader}>
-                <View style={styles.badgeContainer}>
-                    <LinearGradient
-                        colors={['#6366F1', '#A855F7']}
-                        style={styles.numberBadge}
-                    >
-                        <Text style={styles.numberText}>{index + 1}</Text>
-                    </LinearGradient>
-                </View>
-                <View style={styles.suggestionContent}>
-                    <Text style={styles.suggestionTitleText}>{title}</Text>
-                </View>
-                <Ionicons
-                    name={expanded ? "chevron-up" : "chevron-down"}
-                    size={20}
-                    color="#6366F1"
-                    opacity={0.6}
-                />
-            </View>
-
-            {expanded && (
-                <View style={styles.expandedContent}>
-                    <View style={styles.divider} />
-                    <Text style={styles.suggestionReasonText}>{reason}</Text>
-                </View>
-            )}
-        </TouchableOpacity>
-    );
-};
-
-const DuplicateCard = ({ name, size, reason }) => {
-    const [expanded, setExpanded] = useState(false);
-
-    const toggleExpand = () => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setExpanded(!expanded);
-    };
-
-    return (
-        <TouchableOpacity
-            style={[styles.duplicateCard, expanded && styles.cardExpanded]}
-            onPress={toggleExpand}
-            activeOpacity={0.7}
-        >
-            <View style={styles.cardHeader}>
-                <View style={styles.fileIconContainer}>
-                    <Ionicons name="copy-outline" size={24} color="#FF4D4D" />
-                </View>
-                <View style={styles.miniCardContent}>
-                    <Text style={styles.miniCardName} numberOfLines={1}>{name}</Text>
-                    <Text style={styles.miniCardSize}>{size}</Text>
-                </View>
-                <View style={styles.tapIndicator}>
-                    <Text style={styles.tapText}>Tap to see reason</Text>
-                    <Ionicons
-                        name={expanded ? "chevron-up" : "chevron-down"}
-                        size={14}
-                        color="#606060"
-                        style={{ marginLeft: 4 }}
-                    />
-                </View>
-            </View>
-
-            {expanded && (
-                <View style={styles.expandedContent}>
-                    <View style={styles.dividerRed} />
-                    <Text style={styles.reasonLabel}>Reason:</Text>
-                    <Text style={styles.reasonText}>{reason}</Text>
-                </View>
-            )}
-        </TouchableOpacity>
-    );
-};
-
-const AIScreen = ({ scannedFiles }) => {
+const AIScreen = () => {
+    const { scannedFiles } = useFiles();
+    const isFocused = useIsFocused();
     const [loading, setLoading] = useState(false);
     const [aiResult, setAiResult] = useState(null);
     const [error, setError] = useState(null);
+    const lastAnalyzedFilesRef = useRef(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     const runAnalysis = async () => {
         if (!scannedFiles || scannedFiles.length === 0) {
             setLoading(false);
+            setAiResult(null);
+            return;
+        }
+
+        // Avoid redundant analysis if files haven't changed
+        if (lastAnalyzedFilesRef.current === JSON.stringify(scannedFiles)) {
             return;
         }
 
@@ -114,6 +31,7 @@ const AIScreen = ({ scannedFiles }) => {
             setError(null);
             const result = await analyzeFilesWithAI(scannedFiles);
             setAiResult(result);
+            lastAnalyzedFilesRef.current = JSON.stringify(scannedFiles);
             setLoading(false);
 
             Animated.timing(fadeAnim, {
@@ -123,14 +41,16 @@ const AIScreen = ({ scannedFiles }) => {
             }).start();
         } catch (err) {
             console.error(err);
-            setError("Failed to analyze files. Please try again.");
+            setError("Failed to analyze files. Please check your connection and try again.");
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        runAnalysis();
-    }, [scannedFiles]);
+        if (isFocused) {
+            runAnalysis();
+        }
+    }, [isFocused, scannedFiles]);
 
     if (loading) {
         return (

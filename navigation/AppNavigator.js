@@ -9,7 +9,7 @@ import HomeScreen from '../screens/HomeScreen';
 
 const Tab = createBottomTabNavigator();
 
-const AppNavigator = ({ scannedFiles, setScannedFiles }) => {
+const AppNavigator = () => {
     return (
         <NavigationContainer>
             <Tab.Navigator
@@ -50,22 +50,19 @@ const AppNavigator = ({ scannedFiles, setScannedFiles }) => {
             >
                 <Tab.Screen
                     name="Home"
+                    component={HomeScreen}
                     options={{ tabBarLabel: 'Home' }}
-                >
-                    {(props) => <HomeScreen {...props} setScannedFiles={setScannedFiles} />}
-                </Tab.Screen>
+                />
                 <Tab.Screen
                     name="Files"
+                    component={FilesScreen}
                     options={{ tabBarLabel: 'Memory' }}
-                >
-                    {(props) => <FilesScreen {...props} scannedFiles={scannedFiles} setScannedFiles={setScannedFiles} />}
-                </Tab.Screen>
+                />
                 <Tab.Screen
                     name="AI"
+                    component={AIScreen}
                     options={{ tabBarLabel: 'Insights' }}
-                >
-                    {(props) => <AIScreen {...props} scannedFiles={scannedFiles} />}
-                </Tab.Screen>
+                />
             </Tab.Navigator>
         </NavigationContainer>
     );
