@@ -1,7 +1,7 @@
+import { Colors } from '@/constants/theme';
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Colors } from '@/constants/Theme';
 
 interface AnimatedProgressProps {
   progress: number; // 0 to 1

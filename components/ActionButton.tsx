@@ -1,7 +1,7 @@
+import { Colors, Layout, Typography } from '@/constants/theme';
 import React from 'react';
-import { Text, Pressable, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { Colors, Layout, Typography } from '@/constants/Theme';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 

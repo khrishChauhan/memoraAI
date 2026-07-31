@@ -1,10 +1,9 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import { Colors, Layout, Typography } from '@/constants/Theme';
 import { MockProfileStats } from '@/constants/MockData';
+import { Colors, Layout, Typography } from '@/constants/theme';
+import { Feather } from '@expo/vector-icons';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const ListRow = ({ icon, title, value, isLast = false, isDanger = false }: any) => (

@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import { Colors, Layout, Typography } from '@/constants/theme';
 import { Feather } from '@expo/vector-icons';
-import { Colors, Layout, Typography } from '@/constants/Theme';
+import React from 'react';
+import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
 export const GlassSearchBar: React.FC<TextInputProps> = (props) => {
   return (

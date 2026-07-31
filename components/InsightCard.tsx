@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Colors, Layout, Typography } from '@/constants/Theme';
+import { Colors, Layout, Typography } from '@/constants/theme';
 import { Feather } from '@expo/vector-icons';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 interface InsightCardProps {

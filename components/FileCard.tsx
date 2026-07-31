@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Colors, Layout, Typography } from '@/constants/theme';
+import { ScannedFile } from '@/database/repositories/FilesRepository';
 import { Feather } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { Colors, Layout, Typography } from '@/constants/Theme';
-import { ScannedFile } from '@/database/repositories/FilesRepository';
 
 interface FileCardProps {
   file: ScannedFile;

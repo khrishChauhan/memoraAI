@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Theme';
+import { Colors } from '@/constants/theme';
 
 export function useThemeColor(
   props: { light?: string; dark?: string },

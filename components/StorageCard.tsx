@@ -1,7 +1,7 @@
+import { Colors, Layout, Typography } from '@/constants/theme';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedStorageRing } from './AnimatedStorageRing';
-import { Colors, Layout, Typography } from '@/constants/Theme';
 
 interface StorageCardProps {
   used: number;

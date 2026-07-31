@@ -1,8 +1,8 @@
+import { Colors, Typography } from '@/constants/theme';
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Colors, Typography } from '@/constants/Theme';
+import Svg, { Circle } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

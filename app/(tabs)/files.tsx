@@ -1,11 +1,10 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Layout, Typography } from '@/constants/Theme';
-import { GlassSearchBar } from '@/components/GlassSearchBar';
 import { FileCard } from '@/components/FileCard';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { GlassSearchBar } from '@/components/GlassSearchBar';
+import { Colors, Layout, Typography } from '@/constants/theme';
 import { useFilesDatabase } from '@/hooks/useFilesDatabase';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CATEGORIES = ['All', 'Images', 'Videos', 'Documents', 'Applications', 'Audio', 'Archives', 'Downloads', 'Others'];
 const SORTS = ['Newest', 'Oldest', 'Largest', 'Smallest', 'Alphabetical'];

@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
+import { Colors } from '@/constants/theme';
 import { Feather } from '@expo/vector-icons';
-import { Colors } from '@/constants/Theme';
+import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 
 export default function TabLayout() {

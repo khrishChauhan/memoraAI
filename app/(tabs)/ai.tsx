@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import { Colors, Layout, Typography } from '@/constants/Theme';
-import { SectionHeader } from '@/components/SectionHeader';
-import { RecommendationCard } from '@/components/RecommendationCard';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AnimatedProgress } from '@/components/AnimatedProgress';
-import { AIService, AIAnalysisResult } from '@/services/AIService';
+import { RecommendationCard } from '@/components/RecommendationCard';
+import { SectionHeader } from '@/components/SectionHeader';
+import { Colors, Layout, Typography } from '@/constants/theme';
+import { AIAnalysisResult, AIService } from '@/services/AIService';
+import { Feather } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AIScreen() {
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);

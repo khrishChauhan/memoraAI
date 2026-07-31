@@ -1,18 +1,18 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Colors, Layout, Typography } from '@/constants/Theme';
 import { ActionButton } from '@/components/ActionButton';
-import { StorageCard } from '@/components/StorageCard';
 import { RecommendationCard } from '@/components/RecommendationCard';
 import { SectionHeader } from '@/components/SectionHeader';
-import { Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { StorageCard } from '@/components/StorageCard';
+import { Colors, Layout, Typography } from '@/constants/theme';
 import { useStorageStats } from '@/hooks/useStorageStats';
+import { AIAnalysisResult, AIService } from '@/services/AIService';
 import { FileScannerService } from '@/services/FileScannerService';
-import { AIService, AIAnalysisResult } from '@/services/AIService';
-import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const { stats, refreshStats } = useStorageStats();
