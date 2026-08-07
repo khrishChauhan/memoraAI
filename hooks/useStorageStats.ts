@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FilesRepository } from '../database/repositories/FilesRepository';
 
 export interface StorageStats {
@@ -16,10 +16,10 @@ export function useStorageStats() {
 
   const refreshStats = useCallback(async () => {
     const files = await FilesRepository.getAllFiles();
-    
+
     let totalSize = 0;
     const categoryCounts: Record<string, number> = {};
-    let largestFile = files[0];
+    let largestFile = files[0] ?? null;
 
     files.forEach(f => {
       totalSize += f.size;
@@ -29,8 +29,8 @@ export function useStorageStats() {
       }
     });
 
-    const dynamicInsights = [];
-    
+    const dynamicInsights: StorageStats['insights'] = [];
+
     if (categoryCounts['Images'] > 0) {
       dynamicInsights.push({ id: 'i1', title: `${categoryCounts['Images']} Images Found`, subtitle: 'Scanned in your library', type: 'info' });
     }

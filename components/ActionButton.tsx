@@ -32,6 +32,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({ title, icon, onPress
 
   return (
     <AnimatedPressable
+      accessibilityRole="button"
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
@@ -53,16 +54,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 56,
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 18,
     borderRadius: Layout.borderRadius,
     gap: 8,
+    borderWidth: 1,
   },
   primary: {
     backgroundColor: Colors.accent,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   secondary: {
     backgroundColor: Colors.surfaceHighlight,
+    borderColor: Colors.border,
   },
   text: {
     ...Typography.body,

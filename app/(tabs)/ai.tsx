@@ -15,11 +15,12 @@ export default function AIScreen() {
 
   const runAnalysis = async () => {
     setLoading(true);
-    const result = await AIService.analyzeFiles();
-    if (result) {
+    try {
+      const result = await AIService.analyzeFiles();
       setAnalysis(result);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -41,42 +42,45 @@ export default function AIScreen() {
         <View style={styles.centerContent}>
           <Feather name="info" size={48} color={Colors.textMuted} />
           <Text style={styles.emptyText}>No data to analyze. Please scan some files on the Home screen first.</Text>
-          <Pressable style={styles.retryBtn} onPress={runAnalysis}>
+          <Pressable style={styles.retryBtn} onPress={runAnalysis} accessibilityRole="button">
             <Text style={styles.retryBtnText}>Retry Analysis</Text>
           </Pressable>
         </View>
       );
     }
 
-    const highPriority = analysis.recommendations.filter(r => r.priority === 'high');
-    const mediumPriority = analysis.recommendations.filter(r => r.priority === 'medium');
-    const lowPriority = analysis.recommendations.filter(r => r.priority === 'low');
+    const highPriority = analysis.recommendations.filter((rec) => rec.priority === 'high');
+    const mediumPriority = analysis.recommendations.filter((rec) => rec.priority === 'medium');
+    const lowPriority = analysis.recommendations.filter((rec) => rec.priority === 'low');
 
     return (
       <>
-        {/* AI Health Section */}
         <View style={styles.healthCard}>
           <View style={styles.healthHeader}>
             <View style={styles.statusDot} />
             <Text style={styles.statusText}>MemoraAI Engine Online</Text>
           </View>
-          
+
           <View style={styles.healthScoreContainer}>
             <Text style={styles.healthScoreValue}>{analysis.healthScore}</Text>
-            <Text style={styles.healthScoreLabel}>/100 Health</Text>
+            <Text style={styles.healthScoreLabel}>/100 health</Text>
           </View>
-          <AnimatedProgress progress={analysis.healthScore / 100} height={8} color={analysis.healthScore > 80 ? Colors.success : analysis.healthScore > 50 ? Colors.warning : Colors.danger} />
-          
+
+          <AnimatedProgress
+            progress={analysis.healthScore / 100}
+            height={8}
+            color={analysis.healthScore > 80 ? Colors.success : analysis.healthScore > 50 ? Colors.warning : Colors.danger}
+          />
+
           <Text style={styles.summaryText}>{analysis.summary}</Text>
         </View>
 
-        {/* AI Recommendations */}
         {highPriority.length > 0 && (
           <>
             <SectionHeader title="High Priority" />
             <View style={styles.listContainer}>
-              {highPriority.map((rec, idx) => (
-                <Animated.View key={rec.id} entering={FadeInDown.delay(idx * 100).springify()}>
+              {highPriority.map((rec, index) => (
+                <Animated.View key={rec.id} entering={FadeInDown.delay(index * 100).springify()}>
                   <RecommendationCard recommendation={rec} />
                 </Animated.View>
               ))}
@@ -88,8 +92,8 @@ export default function AIScreen() {
           <>
             <SectionHeader title="Medium Priority" />
             <View style={styles.listContainer}>
-              {mediumPriority.map((rec, idx) => (
-                <Animated.View key={rec.id} entering={FadeInDown.delay(idx * 100).springify()}>
+              {mediumPriority.map((rec, index) => (
+                <Animated.View key={rec.id} entering={FadeInDown.delay(index * 100).springify()}>
                   <RecommendationCard recommendation={rec} />
                 </Animated.View>
               ))}
@@ -101,8 +105,8 @@ export default function AIScreen() {
           <>
             <SectionHeader title="Low Priority" />
             <View style={styles.listContainer}>
-              {lowPriority.map((rec, idx) => (
-                <Animated.View key={rec.id} entering={FadeInDown.delay(idx * 100).springify()}>
+              {lowPriority.map((rec, index) => (
+                <Animated.View key={rec.id} entering={FadeInDown.delay(index * 100).springify()}>
                   <RecommendationCard recommendation={rec} />
                 </Animated.View>
               ))}
@@ -118,9 +122,12 @@ export default function AIScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
           <View style={styles.headerRow}>
-            <Text style={styles.headerTitle}>AI Engine</Text>
+            <View>
+              <Text style={styles.headerTitle}>AI Intelligence</Text>
+              <Text style={styles.headerSubtitle}>Prioritized recommendations, distilled to the essentials.</Text>
+            </View>
             {analysis && !loading && (
-              <Pressable onPress={runAnalysis} style={styles.refreshIcon}>
+              <Pressable onPress={runAnalysis} style={styles.refreshIcon} accessibilityRole="button">
                 <Feather name="refresh-cw" size={20} color={Colors.accent} />
               </Pressable>
             )}
@@ -128,8 +135,8 @@ export default function AIScreen() {
         </Animated.View>
 
         {renderContent()}
-        
-        <View style={{ height: 80 }} />
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -156,30 +163,40 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...Typography.h1,
   },
+  headerSubtitle: {
+    ...Typography.body,
+    color: Colors.textMuted,
+    marginTop: 6,
+  },
   refreshIcon: {
-    padding: 8,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 20,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   healthCard: {
     marginHorizontal: Layout.padding,
-    backgroundColor: Colors.surface,
-    borderRadius: Layout.borderRadius,
-    padding: Layout.padding,
     marginBottom: Layout.spacing * 1.5,
+    padding: Layout.padding,
+    borderRadius: Layout.borderRadius,
     borderWidth: 1,
     borderColor: Colors.border,
+    backgroundColor: Colors.surface,
   },
   healthHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    gap: 12,
+    gap: 10,
+    marginBottom: 16,
   },
   statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: Colors.accent,
     shadowColor: Colors.accent,
     shadowOffset: { width: 0, height: 0 },
@@ -195,12 +212,11 @@ const styles = StyleSheet.create({
   healthScoreContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   healthScoreValue: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: Colors.text,
+    ...Typography.largeTitle,
+    fontSize: 42,
   },
   healthScoreLabel: {
     ...Typography.body,
@@ -209,19 +225,19 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     ...Typography.body,
-    marginTop: 20,
-    lineHeight: 24,
+    marginTop: 16,
+    color: Colors.textMuted,
+    lineHeight: 22,
   },
   listContainer: {
     paddingHorizontal: Layout.padding,
     marginBottom: Layout.spacing,
   },
   centerContent: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
     paddingHorizontal: Layout.padding,
+    paddingVertical: 72,
   },
   loadingText: {
     ...Typography.body,
@@ -236,14 +252,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   retryBtn: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 999,
     backgroundColor: Colors.accent,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
   },
   retryBtnText: {
     ...Typography.body,
     fontWeight: '600',
     color: '#FFF',
+  },
+  bottomSpacer: {
+    height: 120,
   },
 });

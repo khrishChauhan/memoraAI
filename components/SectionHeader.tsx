@@ -1,6 +1,6 @@
 import { Colors, Layout, Typography } from '@/constants/theme';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface SectionHeaderProps {
   title: string;
@@ -14,9 +14,9 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, actionTitle
     <View style={[styles.container, style]}>
       <Text style={Typography.h2}>{title}</Text>
       {actionTitle && (
-        <Text onPress={onAction} style={styles.action}>
-          {actionTitle}
-        </Text>
+        <Pressable onPress={onAction} hitSlop={8} accessibilityRole="button" style={styles.actionPill}>
+          <Text style={styles.action}>{actionTitle}</Text>
+        </Pressable>
       )}
     </View>
   );
@@ -30,9 +30,18 @@ const styles = StyleSheet.create({
     marginBottom: Layout.padding,
     paddingHorizontal: Layout.padding,
   },
+  actionPill: {
+    minHeight: 36,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.surfaceHighlight,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
   action: {
     ...Typography.body,
     color: Colors.accent,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

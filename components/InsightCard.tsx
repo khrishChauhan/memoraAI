@@ -7,13 +7,14 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 interface InsightCardProps {
   title: string;
   subtitle: string;
-  type: 'warning' | 'success' | 'danger';
+  type: 'info' | 'warning' | 'success' | 'danger';
   index: number;
 }
 
 export const InsightCard: React.FC<InsightCardProps> = ({ title, subtitle, type, index }) => {
   const getIcon = () => {
     switch (type) {
+      case 'info': return 'info';
       case 'warning': return 'alert-circle';
       case 'success': return 'check-circle';
       case 'danger': return 'trash-2';
@@ -23,6 +24,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ title, subtitle, type,
 
   const getColor = () => {
     switch (type) {
+      case 'info': return Colors.accent;
       case 'warning': return Colors.warning;
       case 'success': return Colors.success;
       case 'danger': return Colors.danger;
@@ -32,9 +34,9 @@ export const InsightCard: React.FC<InsightCardProps> = ({ title, subtitle, type,
 
   return (
     <Animated.View entering={FadeInUp.delay(index * 100).springify()}>
-      <Pressable style={[styles.card, { borderLeftColor: getColor() }]}>
-        <View style={[styles.iconContainer, { backgroundColor: getColor() + '20' }]}>
-          <Feather name={getIcon()} size={20} color={getColor()} />
+      <Pressable style={styles.card} accessibilityRole="button">
+        <View style={[styles.iconContainer, { backgroundColor: getColor() + '18' }]}> 
+          <Feather name={getIcon()} size={18} color={getColor()} />
         </View>
         <View style={styles.content}>
           <Text style={styles.title}>{title}</Text>
@@ -53,24 +55,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
   content: {
     flex: 1,
   },
   title: {
-    ...Typography.h3,
+    ...Typography.body,
+    fontWeight: '600',
     marginBottom: 4,
   },
   subtitle: {
     ...Typography.caption,
+    color: Colors.textMuted,
   },
 });

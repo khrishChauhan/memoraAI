@@ -1,21 +1,21 @@
 import * as DocumentPicker from 'expo-document-picker';
-import { FilesRepository, ScannedFile } from '../database/repositories/FilesRepository';
 import { Alert } from 'react-native';
+import { FilesRepository, ScannedFile } from '../database/repositories/FilesRepository';
 
 export class FileScannerService {
   
   static getCategoryForMimeOrExt(mimeType: string | null, extension: string | null): string {
-    const ext = extension?.toLowerCase();
+    const normalizedExt = extension?.toLowerCase().replace(/^\./, '');
     const mime = mimeType?.toLowerCase();
 
-    if (mime?.startsWith('image/') || ext?.match(/\\.(jpg|jpeg|png|gif|heic|webp)$/i)) return 'Images';
-    if (mime?.startsWith('video/') || ext?.match(/\\.(mp4|mov|avi|mkv)$/i)) return 'Videos';
-    if (mime?.startsWith('audio/') || ext?.match(/\\.(mp3|wav|m4a|aac)$/i)) return 'Audio';
+    if (mime?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'heic', 'webp'].includes(normalizedExt ?? '')) return 'Images';
+    if (mime?.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv'].includes(normalizedExt ?? '')) return 'Videos';
+    if (mime?.startsWith('audio/') || ['mp3', 'wav', 'm4a', 'aac'].includes(normalizedExt ?? '')) return 'Audio';
     
-    if (mime?.includes('pdf') || mime?.includes('document') || ext?.match(/\\.(pdf|doc|docx|txt|rtf)$/i)) return 'Documents';
-    if (mime?.includes('zip') || mime?.includes('tar') || ext?.match(/\\.(zip|tar|gz|rar)$/i)) return 'Archives';
+    if (mime?.includes('pdf') || mime?.includes('document') || ['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(normalizedExt ?? '')) return 'Documents';
+    if (mime?.includes('zip') || mime?.includes('tar') || ['zip', 'tar', 'gz', 'rar'].includes(normalizedExt ?? '')) return 'Archives';
     
-    if (ext?.match(/\\.(apk|exe|dmg|app)$/i)) return 'Applications';
+    if (['apk', 'exe', 'dmg', 'app'].includes(normalizedExt ?? '')) return 'Applications';
 
     return 'Others';
   }

@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: Layout.padding * 2,
     paddingHorizontal: Layout.padding,
+    paddingBottom: 120,
   },
   header: {
     alignItems: 'center',

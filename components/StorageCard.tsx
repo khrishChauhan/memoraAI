@@ -6,18 +6,19 @@ import { AnimatedStorageRing } from './AnimatedStorageRing';
 interface StorageCardProps {
   used: number;
   total: number;
+  title?: string;
 }
 
-export const StorageCard: React.FC<StorageCardProps> = ({ used, total }) => {
+export const StorageCard: React.FC<StorageCardProps> = ({ used, total, title = 'Storage Health' }) => {
   const progress = used / total;
 
   return (
     <View style={styles.card}>
       <AnimatedStorageRing progress={progress} size={140} strokeWidth={14} />
       <View style={styles.info}>
-        <Text style={styles.title}>Internal Storage</Text>
+        <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{used.toFixed(1)} GB of {total} GB used</Text>
-        <Text style={styles.freeText}>{(total - used).toFixed(1)} GB Free</Text>
+        <Text style={styles.freeText}>{(total - used).toFixed(1)} GB free</Text>
       </View>
     </View>
   );
@@ -27,7 +28,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceHighlight,
+    backgroundColor: Colors.surface,
     padding: Layout.padding,
     borderRadius: Layout.borderRadius,
     marginHorizontal: Layout.padding,

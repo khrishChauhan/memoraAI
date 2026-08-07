@@ -75,7 +75,6 @@ const styles = StyleSheet.create({
   },
   percentageText: {
     ...Typography.h1,
-    fontSize: 36,
   },
   subText: {
     ...Typography.caption,

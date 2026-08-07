@@ -6,14 +6,16 @@ import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 export const GlassSearchBar: React.FC<TextInputProps> = (props) => {
   return (
     <View style={styles.container}>
-      <Feather name="search" size={20} color={Colors.textMuted} style={styles.icon} />
+      <Feather name="search" size={18} color={Colors.textMuted} style={styles.icon} />
       <TextInput 
         style={styles.input}
         placeholder="Search memories, files, or ask AI..."
         placeholderTextColor={Colors.textMuted}
+        returnKeyType="search"
+        accessibilityLabel="Search files"
         {...props}
       />
-      <Feather name="mic" size={20} color={Colors.accent} style={styles.iconRight} />
+      <Feather name="mic" size={18} color={Colors.accent} style={styles.iconRight} />
     </View>
   );
 };
@@ -22,7 +24,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(18, 24, 33, 0.7)',
+    backgroundColor: Colors.surface,
     borderRadius: Layout.borderRadius,
     paddingHorizontal: 16,
     height: 56,
