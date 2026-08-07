@@ -10,6 +10,8 @@ interface RecommendationCardProps {
     priority: 'high' | 'medium' | 'low';
     title: string;
     description: string;
+    reason: string;
+    category: string;
     action: 'Review' | 'Delete' | 'Archive' | 'Ignore';
     affectedFiles: string[];
     estimatedStorageSavedMB?: number | null;
@@ -69,6 +71,9 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
               <View style={[styles.priorityDot, { backgroundColor: getPriorityColor() }]} />
               <Text style={[styles.priorityText, { color: getPriorityColor() }]}>{priorityLabel}</Text>
             </View>
+            <View style={styles.categoryPill}>
+              <Text style={styles.categoryText}>{recommendation.category}</Text>
+            </View>
             <Text style={styles.meta}>Tap to review</Text>
           </View>
         </View>
@@ -76,7 +81,12 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
       </View>
       
       <Animated.View style={[styles.body, animatedBodyStyle]}>
-        <Text style={styles.bodyDesc} numberOfLines={expanded ? undefined : 2}>{recommendation.description}</Text>
+        <Text style={styles.bodyDesc}>{recommendation.description}</Text>
+
+        <View style={styles.reasonBlock}>
+          <Text style={styles.reasonLabel}>Reason</Text>
+          <Text style={styles.reasonText} numberOfLines={expanded ? undefined : 2}>{recommendation.reason}</Text>
+        </View>
 
         <View style={styles.chipsRow}>
           {recommendation.affectedFiles.slice(0, 2).map((uri) => (
@@ -165,6 +175,19 @@ const styles = StyleSheet.create({
     ...Typography.small,
     fontWeight: '700',
   },
+  categoryPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.surfaceHighlight,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  categoryText: {
+    ...Typography.small,
+    color: Colors.textMuted,
+    fontWeight: '600',
+  },
   meta: {
     ...Typography.small,
     color: Colors.textMuted,
@@ -179,6 +202,26 @@ const styles = StyleSheet.create({
     ...Typography.body,
     marginTop: 8,
     color: Colors.textMuted,
+  },
+  reasonBlock: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+  },
+  reasonLabel: {
+    ...Typography.small,
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  reasonText: {
+    ...Typography.body,
+    color: Colors.text,
+    lineHeight: 20,
   },
   chipsRow: {
     flexDirection: 'row',

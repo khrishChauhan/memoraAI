@@ -1,18 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FilesRepository, ScannedFile } from '../database/repositories/FilesRepository';
 
+export type AIRecommendationCategory = 'Career' | 'Organization' | 'Storage' | 'Productivity' | 'Academic' | 'Media';
+
+export interface AIRecommendation {
+  id: number;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  reason: string;
+  category: AIRecommendationCategory;
+  action: 'Review' | 'Delete' | 'Archive' | 'Ignore';
+  affectedFiles: string[];
+  estimatedStorageSavedMB?: number | null;
+}
+
 export interface AIAnalysisResult {
   summary: string;
   healthScore: number;
-  recommendations: Array<{
-    id: number;
-    priority: 'high' | 'medium' | 'low';
-    title: string;
-    description: string;
-    action: 'Review' | 'Delete' | 'Archive' | 'Ignore';
-    affectedFiles: string[];
-    estimatedStorageSavedMB?: number | null;
-  }>;
+  recommendations: AIRecommendation[];
 }
 
 type NormalizedFile = {
@@ -23,6 +29,10 @@ type NormalizedFile = {
   lastModified: number;
   category: string;
   duplicate: boolean;
+  purpose: string;
+  importance: 'High' | 'Medium' | 'Low';
+  tags: string[];
+  confidence: number;
 };
 
 type CachedAIAnalysis = {
@@ -31,14 +41,11 @@ type CachedAIAnalysis = {
 };
 
 const CACHE_KEY = 'MEMORA_AI_LATEST_ANALYSIS_V2';
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const ONE_MB = 1024 * 1024;
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const TWO_YEARS_DAYS = 365 * 2;
 const LARGE_FILE_BYTES = 100 * ONE_MB;
 const LARGE_UNUSED_DAYS = 90;
-
-const FILE_ANALYSIS_MODEL = 'llama-3.1-8b-instant';
 
 export class AIService {
   static async getCachedAnalysis(): Promise<AIAnalysisResult | null> {
@@ -65,68 +72,12 @@ export class AIService {
         return cachedAnalysis.result;
       }
 
-      const localAnalysis = this.buildDeterministicAnalysis(normalizedFiles);
-      const apiKey = process.env.EXPO_PUBLIC_GROQ_API_KEY;
-
-      if (!apiKey) {
-        await this.cacheAnalysis(fingerprint, localAnalysis);
-        return localAnalysis;
-      }
-
-      const analysisContext = this.buildAnalysisContext(normalizedFiles, localAnalysis);
-      const response = await fetch(GROQ_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: FILE_ANALYSIS_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt(),
-            },
-            {
-              role: 'user',
-              content: JSON.stringify(analysisContext),
-            },
-          ],
-          temperature: 0,
-          top_p: 1,
-          max_tokens: 700,
-          response_format: { type: 'json_object' },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`Groq API Error ${response.status}: ${errorBody}`);
-      }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error('No response from Groq');
-      }
-
-      const mergedAnalysis = this.mergeAnalysis(localAnalysis, JSON.parse(content));
-      await this.cacheAnalysis(fingerprint, mergedAnalysis);
-      return mergedAnalysis;
+      const deterministicAnalysis = this.buildDeterministicAnalysis(normalizedFiles);
+      await this.cacheAnalysis(fingerprint, deterministicAnalysis);
+      return deterministicAnalysis;
     } catch (error) {
       console.error('AI Analysis Error:', error);
-
-      try {
-        const files = await FilesRepository.getAllFiles();
-        if (files.length === 0) return null;
-
-        const normalizedFiles = this.normalizeFiles(files);
-        const localAnalysis = this.buildDeterministicAnalysis(normalizedFiles);
-        await this.cacheAnalysis(this.buildFingerprint(normalizedFiles), localAnalysis);
-        return localAnalysis;
-      } catch {
-        return null;
-      }
+      return null;
     }
   }
 
@@ -157,6 +108,10 @@ export class AIService {
         lastModified: file.lastModified ?? file.createdAt,
         category: file.category,
         duplicate: Boolean(file.isDuplicate),
+        purpose: file.purpose ?? 'Unknown',
+        importance: file.importance ?? 'Low',
+        tags: Array.isArray(file.tags) ? file.tags : [],
+        confidence: typeof file.confidence === 'number' ? file.confidence : Number(file.confidence ?? 0),
       }))
       .sort((left, right) => {
         const nameCompare = left.name.localeCompare(right.name);
@@ -177,6 +132,10 @@ export class AIService {
       lastModified: file.lastModified,
       category: file.category,
       duplicate: file.duplicate,
+      purpose: file.purpose,
+      importance: file.importance,
+      tags: file.tags,
+      confidence: file.confidence,
     })));
   }
 
@@ -199,69 +158,10 @@ export class AIService {
     const recommendations = this.buildRecommendations(files, duplicateGroups, oldFiles, largeUnusedFiles).slice(0, 6);
 
     return {
-      summary: this.buildSummary(duplicateGroups.length, oldFiles.length, largeUnusedFiles.length, organized),
+      summary: recommendations.length === 0
+        ? 'Your storage is well organized.'
+        : this.buildSummary(duplicateGroups.length, oldFiles.length, largeUnusedFiles.length, organized),
       healthScore,
-      recommendations,
-    };
-  }
-
-  static buildAnalysisContext(files: NormalizedFile[], analysis: AIAnalysisResult) {
-    return {
-      storageHealthScore: analysis.healthScore,
-      fileCount: files.length,
-      fileMetadata: files.map((file) => ({
-        name: file.name,
-        extension: file.extension,
-        size: file.size,
-        lastModified: file.lastModified,
-        category: file.category,
-        duplicate: file.duplicate,
-      })),
-      recommendations: analysis.recommendations.map((recommendation) => ({
-        id: recommendation.id,
-        priority: recommendation.priority,
-        title: recommendation.title,
-        description: recommendation.description,
-        action: recommendation.action,
-        affectedFiles: recommendation.affectedFiles,
-        estimatedStorageSavedMB: recommendation.estimatedStorageSavedMB ?? null,
-      })),
-    };
-  }
-
-  static getSystemPrompt() {
-    return [
-      'You are MemoraAI, a deterministic file analysis engine.',
-      'Analyze only the JSON input provided by the user.',
-      'Do not invent files, file counts, statistics, or scores.',
-      'Do not change the provided storageHealthScore.',
-      'Do not add or remove recommendations.',
-      'Do not change recommendation titles, actions, affectedFiles, or estimatedStorageSavedMB.',
-      'You may only rewrite summary and recommendation descriptions to be concise and factual.',
-      'Keep recommendation descriptions under 15 words.',
-      'Return valid JSON only with this exact shape: {"summary":"...","recommendations":[...]}.',
-    ].join(' ');
-  }
-
-  static mergeAnalysis(baseAnalysis: AIAnalysisResult, rawResponse: unknown): AIAnalysisResult {
-    const parsed = rawResponse as Partial<AIAnalysisResult>;
-    const summary = typeof parsed.summary === 'string' && parsed.summary.trim() ? parsed.summary.trim() : baseAnalysis.summary;
-
-    const recommendations = baseAnalysis.recommendations.map((baseRecommendation) => {
-      const matchedResponse = parsed.recommendations?.find((recommendation) => recommendation.id === baseRecommendation.id || recommendation.title === baseRecommendation.title);
-      const description = typeof matchedResponse?.description === 'string' && matchedResponse.description.trim()
-        ? matchedResponse.description.trim()
-        : baseRecommendation.description;
-
-      return {
-        ...baseRecommendation,
-        description,
-      };
-    });
-
-    return {
-      summary,
-      healthScore: baseAnalysis.healthScore,
       recommendations,
     };
   }
@@ -282,7 +182,7 @@ export class AIService {
     }
 
     if (parts.length === 0) {
-      return organized ? 'Storage looks organized and well balanced.' : 'Storage is clean, with a few minor cleanup opportunities.';
+      return 'Your storage is well organized.';
     }
 
     return `${parts.join(', ')} need attention.`;
@@ -294,97 +194,175 @@ export class AIService {
     oldFiles: NormalizedFile[],
     largeUnusedFiles: NormalizedFile[],
   ) {
-    const recommendations: AIAnalysisResult['recommendations'] = [];
+    const recommendations: AIRecommendation[] = [];
 
-    duplicateGroups.slice(0, 2).forEach((group) => {
-      const representativeName = group[0].name.toLowerCase();
-      const title = representativeName.includes('screenshot')
-        ? 'Delete Duplicate Screenshots'
-        : representativeName.includes('resume') || representativeName.includes('cv')
-          ? 'Delete Duplicate Resumes'
-          : 'Delete Duplicate Files';
+    const addRecommendation = (recommendation: AIRecommendation) => {
+      const duplicateKey = `${recommendation.category}|${recommendation.title}`;
+      if (recommendations.some((existing) => `${existing.category}|${existing.title}` === duplicateKey)) {
+        return;
+      }
+      recommendations.push(recommendation);
+    };
 
-      const savedBytes = group.slice(1).reduce((total, file) => total + file.size, 0);
-      recommendations.push({
+    duplicateGroups
+      .slice(0, 2)
+      .sort((left, right) => this.duplicateGroupSortScore(right) - this.duplicateGroupSortScore(left))
+      .forEach((group) => {
+        addRecommendation(this.buildDuplicateRecommendation(group));
+      });
+
+    const resumeFile = files.find((file) => file.purpose === 'Resume' || file.purpose === 'CV');
+    if (resumeFile) {
+      addRecommendation({
         id: recommendations.length + 1,
         priority: 'high',
-        title,
-        description: `${group.length} files share the same name and size.`,
-        action: 'Delete',
-        affectedFiles: group.map((file) => file.uri),
-        estimatedStorageSavedMB: this.bytesToMB(savedBytes),
-      });
-    });
-
-    largeUnusedFiles
-      .sort((left, right) => right.size - left.size)
-      .slice(0, 2)
-      .forEach((file) => {
-        const title = file.category === 'Videos' ? 'Compress Large Videos' : file.category === 'Archives' ? 'Compress ZIP Archive' : 'Review Large File';
-        recommendations.push({
-          id: recommendations.length + 1,
-          priority: 'high',
-          title,
-          description: `${file.name} is large and older than three months.`,
-          action: file.category === 'Archives' ? 'Archive' : 'Review',
-          affectedFiles: [file.uri],
-          estimatedStorageSavedMB: file.category === 'Videos' ? this.bytesToMB(file.size * 0.3) : null,
-        });
-      });
-
-    const resumeFile = files.find((file) => /(resume|cv|curriculum)/i.test(file.name) && this.getAgeDays(file) > 180);
-    if (resumeFile) {
-      recommendations.push({
-        id: recommendations.length + 1,
-        priority: 'medium',
         title: 'Update Resume',
-        description: `Last modified ${this.formatAge(resumeFile.lastModified)}.`,
+        description: 'Resume needs a refresh.',
+        reason: `${resumeFile.name} was last modified ${this.formatAge(resumeFile.lastModified)}.`,
+        category: 'Career',
         action: 'Review',
         affectedFiles: [resumeFile.uri],
         estimatedStorageSavedMB: null,
       });
     }
 
-    const certificateFile = files.find((file) => /(certificate|cert|transcript|diploma)/i.test(file.name));
+    const certificateFile = files.find((file) => file.purpose === 'Certificate');
     if (certificateFile) {
-      recommendations.push({
+      addRecommendation({
         id: recommendations.length + 1,
-        priority: 'medium',
-        title: 'Move Certificates to Folder',
-        description: `${certificateFile.name} is easier to find in a dedicated folder.`,
-        action: 'Archive',
+        priority: 'high',
+        title: 'Upload Certificate to LinkedIn',
+        description: 'Certificate can strengthen your profile.',
+        reason: `${certificateFile.name} was classified as a certificate.`,
+        category: 'Career',
+        action: 'Review',
         affectedFiles: [certificateFile.uri],
         estimatedStorageSavedMB: null,
       });
     }
 
-    const notesFile = files.find((file) => /(semester|lecture|class notes|study notes|notes)/i.test(file.name) && this.getAgeDays(file) > 120);
-    if (notesFile) {
-      recommendations.push({
+    const projectFile = files.find((file) => ['Project', 'Portfolio', 'Hackathon', 'Source Code', 'Mobile App', 'Website'].includes(file.purpose));
+    if (projectFile) {
+      addRecommendation({
         id: recommendations.length + 1,
-        priority: 'low',
-        title: 'Archive Semester Notes',
-        description: `${notesFile.name} has not changed in months.`,
-        action: 'Archive',
-        affectedFiles: [notesFile.uri],
+        priority: 'high',
+        title: projectFile.purpose === 'Portfolio' ? 'Refresh Portfolio' : 'Add Project to Portfolio',
+        description: 'Project looks ready to showcase.',
+        reason: `${projectFile.name} matches project-related metadata.`,
+        category: 'Career',
+        action: 'Review',
+        affectedFiles: [projectFile.uri],
         estimatedStorageSavedMB: null,
       });
     }
 
-    const fallbackLargeArchive = files.find((file) => file.category === 'Archives' && file.size >= 50 * ONE_MB);
-    if (fallbackLargeArchive && recommendations.length < 6) {
-      recommendations.push({
+    const academicFile = files.find((file) => ['Semester Notes', 'Assignment', 'Research Paper', 'Presentation'].includes(file.purpose));
+    if (academicFile) {
+      const academicTitle = academicFile.purpose === 'Research Paper'
+        ? 'Review Research Paper'
+        : academicFile.purpose === 'Assignment'
+          ? 'Review Assignment Draft'
+          : 'Archive Semester Notes';
+
+      addRecommendation({
         id: recommendations.length + 1,
-        priority: 'low',
-        title: 'Compress ZIP Archive',
-        description: `${fallbackLargeArchive.name} is a large compressed file.`,
+        priority: 'medium',
+        title: academicTitle,
+        description: 'Academic material should be organized.',
+        reason: `${academicFile.name} is marked as ${academicFile.purpose.toLowerCase()}.`,
+        category: 'Academic',
         action: 'Archive',
-        affectedFiles: [fallbackLargeArchive.uri],
+        affectedFiles: [academicFile.uri],
         estimatedStorageSavedMB: null,
       });
     }
 
-    return recommendations;
+    const mediaScreenshotFiles = files.filter((file) => file.purpose === 'Screenshots');
+    if (mediaScreenshotFiles.length > 0) {
+      addRecommendation({
+        id: recommendations.length + 1,
+        priority: 'low',
+        title: 'Delete Duplicate Screenshots',
+        description: 'Screenshots often stack up quickly.',
+        reason: `${mediaScreenshotFiles.length} screenshot file${mediaScreenshotFiles.length === 1 ? '' : 's'} were classified as low importance.`,
+        category: 'Media',
+        action: 'Delete',
+        affectedFiles: mediaScreenshotFiles.slice(0, 6).map((file) => file.uri),
+        estimatedStorageSavedMB: this.bytesToMB(mediaScreenshotFiles.reduce((total, file) => total + file.size * 0.25, 0)),
+      });
+    }
+
+    const downloadsFile = files.find((file) => file.purpose === 'Downloads');
+    if (downloadsFile) {
+      addRecommendation({
+        id: recommendations.length + 1,
+        priority: 'low',
+        title: 'Organize Downloads',
+        description: 'Downloads folder needs sorting.',
+        reason: `${downloadsFile.name} was detected in downloads metadata.`,
+        category: 'Organization',
+        action: 'Archive',
+        affectedFiles: [downloadsFile.uri],
+        estimatedStorageSavedMB: null,
+      });
+    }
+
+    const largeVideoFiles = files
+      .filter((file) => file.purpose === 'Videos' || file.category === 'Videos')
+      .filter((file) => file.size >= LARGE_FILE_BYTES)
+      .sort((left, right) => right.size - left.size)
+      .slice(0, 2);
+
+    if (largeVideoFiles.length > 0) {
+      addRecommendation({
+        id: recommendations.length + 1,
+        priority: 'high',
+        title: 'Compress Large Videos',
+        description: 'Large videos detected.',
+        reason: `${largeVideoFiles.length} video${largeVideoFiles.length === 1 ? '' : 's'} exceed 100 MB.`,
+        category: 'Storage',
+        action: 'Review',
+        affectedFiles: largeVideoFiles.map((file) => file.uri),
+        estimatedStorageSavedMB: this.bytesToMB(largeVideoFiles.reduce((total, file) => total + file.size * 0.3, 0)),
+      });
+    }
+
+    const largeArchiveFiles = files
+      .filter((file) => file.purpose === 'Archive' || file.category === 'Archives')
+      .filter((file) => file.size >= LARGE_FILE_BYTES || this.getAgeDays(file) >= 365)
+      .sort((left, right) => right.size - left.size)
+      .slice(0, 2);
+
+    if (largeArchiveFiles.length > 0) {
+      addRecommendation({
+        id: recommendations.length + 1,
+        priority: 'medium',
+        title: 'Archive Old ZIP Files',
+        description: 'Archive files detected.',
+        reason: `${largeArchiveFiles.length} archive${largeArchiveFiles.length === 1 ? '' : 's'} are old or oversized.`,
+        category: 'Organization',
+        action: 'Archive',
+        affectedFiles: largeArchiveFiles.map((file) => file.uri),
+        estimatedStorageSavedMB: null,
+      });
+    }
+
+    const unclearFile = files.find((file) => file.purpose === 'Unknown' && file.confidence <= 55);
+    if (unclearFile) {
+      addRecommendation({
+        id: recommendations.length + 1,
+        priority: 'low',
+        title: 'Rename Unclear Files',
+        description: 'File name could be clearer.',
+        reason: `${unclearFile.name} has low classification confidence.`,
+        category: 'Productivity',
+        action: 'Review',
+        affectedFiles: [unclearFile.uri],
+        estimatedStorageSavedMB: null,
+      });
+    }
+
+    return recommendations.slice(0, 6);
   }
 
   static findDuplicateGroups(files: NormalizedFile[]) {
@@ -400,6 +378,88 @@ export class AIService {
     return [...groupedFiles.values()]
       .filter((group) => group.length > 1)
       .sort((left, right) => right.length - left.length || right[0].size - left[0].size);
+  }
+
+  static buildDuplicateRecommendation(group: NormalizedFile[]): AIRecommendation {
+    const names = group.map((file) => file.name.toLowerCase()).join(' ');
+    const category = names.includes('screenshot') || names.includes('screen shot') || names.includes('image') || names.includes('photo')
+      ? 'Media'
+      : names.includes('resume') || names.includes('cv')
+        ? 'Career'
+        : 'Storage';
+
+    const title = names.includes('screenshot') || names.includes('screen shot')
+      ? 'Delete Duplicate Screenshots'
+      : names.includes('image') || names.includes('photo')
+        ? 'Merge Duplicate Images'
+        : names.includes('download')
+          ? 'Organize Duplicate Downloads'
+          : 'Delete Duplicate Files';
+
+    const savedBytes = group.slice(1).reduce((total, file) => total + file.size, 0);
+    return {
+      id: 0,
+      priority: 'high',
+      title,
+      description: 'Duplicate files detected.',
+      reason: `${group.length} files share the same name and size.`,
+      category,
+      action: 'Delete',
+      affectedFiles: group.map((file) => file.uri),
+      estimatedStorageSavedMB: this.bytesToMB(savedBytes),
+    };
+  }
+
+  static duplicateGroupSortScore(group: NormalizedFile[]) {
+    const names = group.map((file) => file.name.toLowerCase()).join(' ');
+    if (names.includes('screenshot') || names.includes('screen shot')) return 3;
+    if (names.includes('image') || names.includes('photo')) return 2;
+    if (names.includes('download')) return 1;
+    return 0;
+  }
+
+  static isVideoFile(name: string, extension: string | null) {
+    const lowerName = name.toLowerCase();
+    const ext = extension?.toLowerCase();
+    return /(video|movie|clip|screenrecord|screen-record)/i.test(lowerName) || ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext ?? '');
+  }
+
+  static isArchiveFile(name: string, extension: string | null) {
+    const lowerName = name.toLowerCase();
+    const ext = extension?.toLowerCase();
+    return /(zip|archive|backup|compressed)/i.test(lowerName) || ['zip', 'tar', 'gz', 'rar', '7z'].includes(ext ?? '');
+  }
+
+  static findBestMatch(files: NormalizedFile[], pattern: RegExp) {
+    return files
+      .filter((file) => pattern.test(file.name.toLowerCase()) || pattern.test(file.category.toLowerCase()) || pattern.test(file.purpose.toLowerCase()))
+      .sort((left, right) => right.confidence - left.confidence || right.size - left.size || left.name.localeCompare(right.name))[0] ?? null;
+  }
+
+  static dedupeRecommendations(recommendations: AIRecommendation[]) {
+    const seen = new Set<string>();
+    const ordered: AIRecommendation[] = [];
+
+    recommendations
+      .map((recommendation, index) => ({ ...recommendation, id: index + 1 }))
+      .sort((left, right) => this.priorityRank(left.priority) - this.priorityRank(right.priority) || left.category.localeCompare(right.category) || left.title.localeCompare(right.title))
+      .forEach((recommendation) => {
+        const key = `${recommendation.category}|${recommendation.title}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        ordered.push(recommendation);
+      });
+
+    return ordered;
+  }
+
+  static priorityRank(priority: AIRecommendation['priority']) {
+    switch (priority) {
+      case 'high': return 0;
+      case 'medium': return 1;
+      case 'low': return 2;
+      default: return 3;
+    }
   }
 
   static isStorageOrganized(files: NormalizedFile[], duplicateGroupCount: number, oldFileCount: number, largeUnusedCount: number) {

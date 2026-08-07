@@ -1,5 +1,5 @@
-import { isWeb, getDb, getWebDbKey } from '../db';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDb, getWebDbKey, isWeb } from '../db';
 
 export interface ScannedFile {
   id: string;
@@ -10,6 +10,10 @@ export interface ScannedFile {
   mimeType: string | null;
   lastModified: number | null;
   category: string;
+  purpose: string;
+  importance: 'High' | 'Medium' | 'Low';
+  tags: string[];
+  confidence: number;
   hash: string | null;
   isDuplicate: number;
   createdAt: number;
@@ -38,11 +42,24 @@ export class FilesRepository {
     
     try {
       await db.runAsync(
-        `INSERT INTO Files (id, name, uri, size, extension, mimeType, lastModified, category, hash, isDuplicate, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO Files (id, name, uri, size, extension, mimeType, lastModified, category, purpose, importance, tags, confidence, hash, isDuplicate, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          file.id, file.name, file.uri, file.size, file.extension, file.mimeType, 
-          file.lastModified, file.category, file.hash, file.isDuplicate, file.createdAt
+          file.id,
+          file.name,
+          file.uri,
+          file.size,
+          file.extension,
+          file.mimeType,
+          file.lastModified,
+          file.category,
+          file.purpose,
+          file.importance,
+          JSON.stringify(file.tags),
+          file.confidence,
+          file.hash,
+          file.isDuplicate,
+          file.createdAt,
         ]
       );
       return true;
@@ -60,8 +77,14 @@ export class FilesRepository {
     const db = getDb();
     if (!db) return [];
     try {
-      const allRows = await db.getAllAsync<ScannedFile>('SELECT * FROM Files ORDER BY createdAt DESC');
-      return allRows;
+      const allRows = await db.getAllAsync<any>('SELECT * FROM Files ORDER BY createdAt DESC');
+      return allRows.map((row) => ({
+        ...row,
+        purpose: row.purpose ?? 'Unknown',
+        importance: row.importance ?? 'Low',
+        tags: this.parseTags(row.tags),
+        confidence: typeof row.confidence === 'number' ? row.confidence : Number(row.confidence ?? 0),
+      }));
     } catch (e) {
       console.error('DB Query Error:', e);
       return [];
@@ -89,10 +112,33 @@ export class FilesRepository {
     try {
       const data = await AsyncStorage.getItem(getWebDbKey());
       if (!data) return [];
-      return JSON.parse(data);
+      return JSON.parse(data).map((row: any) => ({
+        ...row,
+        purpose: row.purpose ?? 'Unknown',
+        importance: row.importance ?? 'Low',
+        tags: this.parseTags(row.tags),
+        confidence: typeof row.confidence === 'number' ? row.confidence : Number(row.confidence ?? 0),
+      }));
     } catch (e) {
       console.error('Web DB Query Error:', e);
       return [];
     }
+  }
+
+  private static parseTags(tags: unknown): string[] {
+    if (Array.isArray(tags)) {
+      return tags.filter((tag): tag is string => typeof tag === 'string');
+    }
+
+    if (typeof tags === 'string') {
+      try {
+        const parsed = JSON.parse(tags);
+        return Array.isArray(parsed) ? parsed.filter((tag): tag is string => typeof tag === 'string') : [];
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
   }
 }

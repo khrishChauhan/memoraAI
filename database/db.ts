@@ -20,11 +20,31 @@ export const initDatabase = async () => {
       mimeType TEXT,
       lastModified INTEGER,
       category TEXT NOT NULL,
+      purpose TEXT DEFAULT 'Unknown',
+      importance TEXT DEFAULT 'Low',
+      tags TEXT DEFAULT '[]',
+      confidence INTEGER DEFAULT 0,
       hash TEXT,
       isDuplicate INTEGER DEFAULT 0,
       createdAt INTEGER NOT NULL
     );
   `);
+
+  const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(Files)');
+  const columnNames = new Set(columns.map((column) => column.name));
+
+  const migrations = [
+    { name: 'purpose', sql: `ALTER TABLE Files ADD COLUMN purpose TEXT DEFAULT 'Unknown'` },
+    { name: 'importance', sql: `ALTER TABLE Files ADD COLUMN importance TEXT DEFAULT 'Low'` },
+    { name: 'tags', sql: `ALTER TABLE Files ADD COLUMN tags TEXT DEFAULT '[]'` },
+    { name: 'confidence', sql: `ALTER TABLE Files ADD COLUMN confidence INTEGER DEFAULT 0` },
+  ];
+
+  for (const migration of migrations) {
+    if (!columnNames.has(migration.name)) {
+      await db.execAsync(migration.sql);
+    }
+  }
 };
 
 export const getDb = () => db;

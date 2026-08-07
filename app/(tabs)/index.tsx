@@ -5,7 +5,7 @@ import { StorageCard } from '@/components/StorageCard';
 import { Colors, Layout, Typography } from '@/constants/theme';
 import { FilesRepository, ScannedFile } from '@/database/repositories/FilesRepository';
 import { useStorageStats } from '@/hooks/useStorageStats';
-import { FileScannerService } from '@/services/FileScannerService';
+import { FileScannerService } from '../../services/FileScannerService';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
